@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -143,16 +144,109 @@ namespace _40000_Statistics
         }
         public double DamageNoChance(AttackBase attack, int damageNo, int woundNo)
         {
+            if (damageNo == 0) return woundNo == 0 ? 1 : 0;
             var damageRange = DamageRange(attack);
             if (damageRange.Item1 == damageRange.Item2) return 1;
             var parts = attack.DamageExtra.Split('+');
             var dicePart = parts[0].Split(new string[] { "D" }, StringSplitOptions.RemoveEmptyEntries);
-            var x =CalculateProbability(damageNo - (parts.Count() > 1 ? Int32.Parse(parts[1]) : 0), dicePart.Count() > 1 ? Int32.Parse(dicePart[0]) * woundNo : 1 * woundNo);
-            return x;
+            return CalculateProbability(damageNo - (parts.Count() > 1 ? Int32.Parse(parts[1]) : 0), dicePart.Count() > 1 ? Int32.Parse(dicePart[0]) * woundNo : 1 * woundNo);
         }
-        public Dictionary<int, double> CalculateDeathPercentages(Tuple<int, int> damageRange, KeyValuePair<int, ModelBase> newUnit2, KeyValuePair<int, double> save)
+        public Dictionary<int, double> CalculateDeathPercentages(AttackBase attack, Tuple<int, int> damageRange, KeyValuePair<int, ModelBase> newUnit2, KeyValuePair<int, double> save) => save.Key == 0 ? new Dictionary<int, double>() { { 0, save.Value } } :
+                CalculateDamagePercentages(attack, damageRange, newUnit2, save)
+                    .Select(t => new Tuple<int, double>(t.Item2.Where(x => x.Item1 == 0).Count(), t.Item1))
+                    .GroupBy(t => t.Item1)
+                    .ToDictionary(g => g.Key, g => g.Sum(t => t.Item2) * save.Value).DefaultIfEmpty(new KeyValuePair<int, double>(0, save.Value)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        public List<Tuple<double, List<Tuple<int, ModelBase>>>> CalculateDamagePercentages(AttackBase attack, Tuple<int, int> damageRange, KeyValuePair<int, ModelBase> newUnit2, KeyValuePair<int, double> save)
         {
+            var temp = new List<Dictionary<int, double>>();
 
+            for (int i = 1; i <= save.Key; i++)
+            {
+                var damageRangeDictionary = new Dictionary<int, double>();
+
+                for (int damageValue = damageRange.Item1; damageValue <= damageRange.Item2; damageValue++)
+                {
+                    double damageChance = DamageNoChance(attack, damageValue, 1);
+                    damageRangeDictionary[damageValue] = damageChance;
+                }
+
+                temp.Add(damageRangeDictionary);
+            }
+
+
+            List<Tuple<double, List<Tuple<int, ModelBase>>>> masterDamagedlist = new List<Tuple<double, List<Tuple<int, ModelBase>>>>();
+            foreach (var damageRole in temp)
+            {
+                if (masterDamagedlist.Count > 0)
+                {
+                    var temp2 = new List<List<Tuple<double, List<Tuple<int, ModelBase>>>>>();
+                    foreach (var preDamagedlist in masterDamagedlist)
+                    {
+                        List<Tuple<int, double, ModelBase>> damagedlist = new List<Tuple<int, double, ModelBase>>();
+                        bool newModel = false;
+                        foreach (var damageNo in damageRole)
+                        {
+                            if (preDamagedlist.Item2.Last().Item1 == 0)
+                            {
+                                newModel = true;
+                                damagedlist.Add(new Tuple<int, double, ModelBase>(Math.Max(0, newUnit2.Value.Wounds - damageNo.Key), damageNo.Value, newUnit2.Value));
+                            }
+                            else
+                            {
+                                damagedlist.Add(new Tuple< int, double, ModelBase>(Math.Max(0, preDamagedlist.Item2.Last().Item1 - damageNo.Key), damageNo.Value, newUnit2.Value));
+                            }
+                        }
+                        List<Tuple<double, List<Tuple<int, ModelBase>>>> groupedDamagedList =
+                            damagedlist
+                            .GroupBy(damage => damage.Item1)
+                            .Select(damage =>
+                                {
+                                    var newList = new List<Tuple<int, ModelBase>>(preDamagedlist.Item2);
+                                    if (!newModel && newList.Count > 0)
+                                        newList.RemoveAt(newList.Count - 1);
+                                    return new Tuple<double, List<Tuple<int, ModelBase>>>(
+                                        damage.Sum(t => t.Item2 * preDamagedlist.Item1),
+                                        new List<Tuple<int, ModelBase>>(newList) {
+                                            { new Tuple<int, ModelBase>(damage.Key, damage.First().Item3) }
+                                        }
+                                    );
+                                })
+                            .ToList();
+                        temp2.Add(groupedDamagedList);
+                    }
+                    masterDamagedlist = temp2
+                        .SelectMany(innerList => innerList)
+                        .GroupBy(t => string.Join(",", t.Item2.Select(x => $"{x.Item1} - ({x.Item2})")))
+                        .Select(g => new Tuple<double, List<Tuple<int, ModelBase>>>(
+                            g.Sum(t => t.Item1),
+                            g.First().Item2
+                        ))
+                        .ToList();
+                }
+                else
+                {
+                    List<Tuple<int, double, ModelBase>> damagedlist = new List<Tuple<int, double, ModelBase>>();
+                    foreach (var damageNo in damageRole)
+                    {
+                        damagedlist.Add(new Tuple<int, double, ModelBase>(Math.Max(0, newUnit2.Value.Wounds - damageNo.Key), damageNo.Value, newUnit2.Value));
+                    }
+                    List<Tuple<double, List<Tuple<int, ModelBase>>>> groupedDamagedList = 
+                        damagedlist
+                        .GroupBy(damage => damage.Item1)
+                        .Select(damage => 
+                            new Tuple<double, List<Tuple<int, ModelBase>>>(
+                                damage.Sum(t => t.Item2), 
+                                new List<Tuple<int, ModelBase>>() { 
+                                    { new Tuple<int, ModelBase>(damage.Key, damage.First().Item3) } 
+                                }
+                            )
+                        )
+                        .ToList();
+                    masterDamagedlist = groupedDamagedList;
+                }
+            }
+
+            return masterDamagedlist;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -520,12 +614,12 @@ namespace _40000_Statistics
             Console.WriteLine();
         }
         /// <summary>
-        /// 5. Base Kill Table
+        /// 8. Base Full Kill Table
         /// </summary>
-        internal void KillBreakdownTable()
+        internal void FullKillBreakdownTable()
         {
             Console.WriteLine($"{Unit1.Name} => {Unit2.Name}");
-            var table = new ConsoleTable("Name", "Weapon No", "Models", "Wounds", "=>", "", "");
+            var table = new ConsoleTable("Name", "Weapon No", "Models", "Wounds", "=>", "", "", "");
             foreach (var item in Unit1.Attacks)
             {
                 var showAttack = true;
@@ -544,7 +638,9 @@ namespace _40000_Statistics
                         var showSaveNo = true;
                         foreach (var save in saveBreakdown)
                         {
-                            var damageBreakdown = ParallelEnumerable.Range(damageRange.Item1 * save.Key, (damageRange.Item2 * save.Key) - (damageRange.Item1 * save.Key) + 1).ToDictionary(y => y, y => DamageNoChance(item, y, save.Key) * save.Value);
+                            var deathPercentages = CalculateDeathPercentages(item, damageRange, newUnit2, save);
+                            var greaterThan = deathPercentages.Where(x => x.Key >= newUnit2.Key).GroupBy(x => x.Key > 0).ToDictionary(x => newUnit2.Key, x => x.Sum(y => y.Value));
+                            var lessThan = deathPercentages.Where(x => x.Key < newUnit2.Key);
 
                             table.AddRow(
                                 showAttack ? item.Name : "",
@@ -553,10 +649,120 @@ namespace _40000_Statistics
                                 showSaveNo ? newUnit2.Value.Wounds.ToString() : "",
                                 $"{save.Key}: {Percent(save.Value)}",
                                 damageRange,
-                                CalculateDeathPercentages(damageRange, newUnit2, save).First()
+                                string.Join(", ", lessThan.Select(kvp => $"Key: {kvp.Key}, Value: {Percent(kvp.Value)}")),
+                                string.Join(", ", greaterThan.Select(kvp => $"Key: {kvp.Key}, Value: {Percent(kvp.Value)}"))
                             );
                             showAttack = showWeaponNo = showSaveNo = false;
                         }
+                    }
+                }
+            }
+
+            table.Write();
+            Console.WriteLine();
+        }
+        /// <summary>
+        /// 9. Base Kill Table
+        /// </summary>
+        internal void KillBreakdownTable()
+        {
+            Console.WriteLine($"{Unit1.Name} => {Unit2.Name}");
+            var table = new ConsoleTable("Name", "Weapon No", "Models", "=>", "");
+            foreach (var item in Unit1.Attacks)
+            {
+                var showAttack = true;
+                for (int WeNo = item.NoMin ?? item.NoMax; WeNo <= item.NoMax; WeNo++)
+                {
+                    var showWeaponNo = true;
+                    if (WeNo == 0) continue;
+                    var attackRange = AttackRange(item);
+                    var damageRange = DamageRange(item);
+                    var hitBreakdown = GetHitBreakdown(item, attackRange, WeNo);
+
+                    foreach (var newUnit2 in (Unit2 is UnitBase unitBase ? unitBase : new UnitBase(Unit2)).Models.GroupBy(model => model.Value).ToDictionary(group => group.Sum(m => m.Key), group => group.First().Value))
+                    {
+                        var woundBreakdown = GetWoundBreakdown(hitBreakdown, item, attackRange, WeNo, newUnit2.Value);
+                        var saveBreakdown = GetSaveBreakdown(woundBreakdown, item, attackRange, WeNo, newUnit2.Value);
+                        var showSaveNo = true;
+                        var killList = new List<Dictionary<int, double>>();
+                        foreach (var save in saveBreakdown)
+                        {
+                            var deathPercentages = CalculateDeathPercentages(item, damageRange, newUnit2, save);
+                            var greaterThan = deathPercentages
+                                .Where(x => x.Key >= newUnit2.Key)
+                                .GroupBy(x => x.Key > 0)
+                                .ToDictionary(x => newUnit2.Key, x => x.Sum(y => y.Value));
+                            var lessThan = deathPercentages
+                                .Where(x => x.Key < newUnit2.Key);
+                            killList.Add(lessThan.Concat(greaterThan).ToDictionary(x => x.Key, x => x.Value));
+                        }
+                        foreach (var killCount in killList.SelectMany(dict => dict).GroupBy(kvp => kvp.Key, kvp => kvp.Value).ToDictionary(g => g.Key, g => g.Sum()))
+                        {
+                            table.AddRow(
+                                showAttack ? item.Name : "",
+                                showWeaponNo ? WeNo.ToString() : "",
+                                showSaveNo ? newUnit2.Key.ToString() : "",
+                                killCount.Key,
+                                Percent(killCount.Value)
+                            );
+                            showAttack = showWeaponNo = showSaveNo = false;
+                        }
+                    }
+                }
+            }
+
+            table.Write();
+            Console.WriteLine();
+        }
+        /// <summary>
+         /// 10. Base Kill Table
+         /// </summary>
+        internal void KillAverageTable()
+        {
+            Console.WriteLine($"{Unit1.Name} => {Unit2.Name}");
+            var table = new ConsoleTable("Name", "Weapon No", "Models", "0%", "=>", "100%", "=>", "Average", "=>");
+            foreach (var item in Unit1.Attacks)
+            {
+                var showAttack = true;
+                for (int WeNo = item.NoMin ?? item.NoMax; WeNo <= item.NoMax; WeNo++)
+                {
+                    var showWeaponNo = true;
+                    if (WeNo == 0) continue;
+                    var attackRange = AttackRange(item);
+                    var damageRange = DamageRange(item);
+                    var hitBreakdown = GetHitBreakdown(item, attackRange, WeNo);
+
+                    foreach (var newUnit2 in (Unit2 is UnitBase unitBase ? unitBase : new UnitBase(Unit2)).Models.GroupBy(model => model.Value).ToDictionary(group => group.Sum(m => m.Key), group => group.First().Value))
+                    {
+                        var woundBreakdown = GetWoundBreakdown(hitBreakdown, item, attackRange, WeNo, newUnit2.Value);
+                        var saveBreakdown = GetSaveBreakdown(woundBreakdown, item, attackRange, WeNo, newUnit2.Value);
+                        var showSaveNo = true;
+                        var killList = new List<Dictionary<int, double>>();
+                        foreach (var save in saveBreakdown)
+                        {
+                            var deathPercentages = CalculateDeathPercentages(item, damageRange, newUnit2, save);
+                            var greaterThan = deathPercentages
+                                .Where(x => x.Key >= newUnit2.Key)
+                                .GroupBy(x => x.Key > 0)
+                                .ToDictionary(x => newUnit2.Key, x => x.Sum(y => y.Value));
+                            var lessThan = deathPercentages
+                                .Where(x => x.Key < newUnit2.Key);
+                            killList.Add(lessThan.Concat(greaterThan).ToDictionary(x => x.Key, x => x.Value));
+                        }
+                        var newkillList = killList.SelectMany(dict => dict).GroupBy(kvp => kvp.Key, kvp => kvp.Value).ToDictionary(g => g.Key, g => g.Sum());
+
+                        table.AddRow(
+                            showAttack ? item.Name : "",
+                            showWeaponNo ? WeNo.ToString() : "",
+                            showSaveNo ? newUnit2.Key.ToString() : "",
+                            $"0/{newUnit2.Key}",
+                            Percent(newkillList.Where(x => x.Key == 0).FirstOrDefault().Value),
+                            $"{newUnit2.Key}/{newUnit2.Key}",
+                            Percent(newkillList.Where(x => x.Key == newUnit2.Key).FirstOrDefault().Value),
+                            $"{newkillList.Aggregate((l, r) => l.Value > r.Value ? l : r).Key}/{newUnit2.Key}",
+                            Percent(newkillList.Aggregate((l, r) => l.Value > r.Value ? l : r).Value)
+                        );
+                        showAttack = showWeaponNo = showSaveNo = false;
                     }
                 }
             }

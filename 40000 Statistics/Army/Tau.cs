@@ -75,7 +75,7 @@ namespace _40000_Statistics
             new ModelBase() { Name = "Commander Shadowsun", Movement = 10, Toughness = 4, ArmorSave = 3, InvulnerableSave = 5, Wounds = 6, Leadership = 6, ObjectiveControl = 1,
                 Attacks = new List<AttackBase>()
                 {
-                    new AttackBase() { NoMax = 1, Name = "Flechette launcher",         Range = 18, Attacks = 5, BallisticSkill = 2, Strength = 3,  ArmorPenetration = 0, Damage = 1 },
+                    //new AttackBase() { NoMax = 1, Name = "Flechette launcher",         Range = 18, Attacks = 5, BallisticSkill = 2, Strength = 3,  ArmorPenetration = 0, Damage = 1 },
                     new AttackBase() { NoMax = 2, Name = "High-energy fusion blaster", Range = 18, Attacks = 1, BallisticSkill = 2, Strength = 10, ArmorPenetration = 4, DamageExtra = "D6" },
                     new AttackBase() { NoMax = 1, Name = "Light missile pod",          Range = 24, Attacks = 2, BallisticSkill = 2, Strength = 7,  ArmorPenetration = 0, Damage = 2 },
                     new AttackBase() { NoMax = 1, Name = "Pulse pistol",               Range = 12, Attacks = 1, BallisticSkill = 3, Strength = 5,  ArmorPenetration = 0, Damage = 1, Modifiers = Modifiers.Pistol },

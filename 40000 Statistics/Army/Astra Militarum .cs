@@ -42,7 +42,7 @@ namespace _40000_Statistics
             new UnitBase() { Name = "Catachan Jungle Fighter - 20",
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 18, new ModelBase() { Name = "Jungle Fighters", Movement = 6, Toughness = 5, ArmorSave = 5, Wounds = 1, Leadership = 7, ObjectiveControl = 2,
+                    { 18, new ModelBase() { Name = "Jungle Fighters", Movement = 6, Toughness = 3, ArmorSave = 5, Wounds = 1, Leadership = 7, ObjectiveControl = 2,
                         Attacks = new List<AttackBase>()
                         {
                             new AttackBase() { NoMax = 4,  NoMin = 0,  Name = "Flamer",              Range = 12, AttacksExtra = "D6",                     Strength = 4, ArmorPenetration = 0, Damage = 1, Modifiers = Modifiers.Ignores_Cover | Modifiers.Torrent },
