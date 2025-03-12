@@ -53,6 +53,9 @@ namespace _40000_Statistics
             hash = hash * 31 + Wounds.GetHashCode();
             return hash;
         }
+
+        internal AttackOptionGroupBase GetAttackOptionGroupBase(int unitNo) => new AttackOptionGroupBase(AttackGroups, unitNo);
+
         public static bool operator ==(ModelBase left, ModelBase right) => left is null ? right is null : left.Equals(right);
         public static bool operator !=(ModelBase left, ModelBase right) => !(left == right);
     }
@@ -69,15 +72,46 @@ namespace _40000_Statistics
         public override int Wounds => Models.Values.FirstOrDefault()?.Wounds ?? 0;
         public override int Leadership => Models.Values.FirstOrDefault()?.Leadership ?? 0;
         public override int ObjectiveControl => Models.Values.FirstOrDefault()?.ObjectiveControl ?? 0;
+
+        public ModelBase this[int key]
+        {
+            get
+            {
+                Models.TryGetValue(key, out var value);
+                return value;
+            }
+            set
+            {
+                Models[key] = value;
+            }
+        }
     }
 
     internal class AttackGroupBase
     {
         public int MinNo { get; set; }
         public int MaxNo { get; set; }
+        public int VarNo { get => MaxNo - MinNo; }
         public int[] Attacks { get; set; }
 
         public AttackGroupBase(int maxNo = 1, int? minNo = null) { MinNo = minNo??maxNo; MaxNo = maxNo; }
+
+        public void AddToSeed(ref Dictionary<int, int> seed, int? multiply = null)
+        {
+            foreach (var Attack in Attacks)
+            {
+                seed[Attack] = seed.ContainsKey(Attack) ? seed[Attack] + multiply ?? MinNo : multiply ?? MinNo;
+            }
+        }
+        public Dictionary<int, Dictionary<int, int>> AddToChoice()
+        {
+            return Enumerable.Range(0, VarNo + 1).Select((value, index) =>
+            {
+                Dictionary<int, int> output = new Dictionary<int, int>();
+                AddToSeed(ref output, value);
+                return new { Index = value, Value = output };
+            }).ToDictionary(x => x.Index, x => x.Value);
+        }
     }
     internal class AttackOptionGroupBase : AttackGroupBase
     {
@@ -89,6 +123,50 @@ namespace _40000_Statistics
             AttackOption = new List<AttackGroupBase> { attackGroup };
             this.MinNo = attackGroup.MinNo;
             this.MaxNo = attackGroup.MaxNo;
+        }
+        public AttackOptionGroupBase(List<AttackGroupBase> attackGroupBases, int maxNo = 1, int? minNo = null) : base(maxNo, minNo)
+        {
+            AttackOption = attackGroupBases;
+        }
+
+        public IEnumerable<Dictionary<int, int>> GetAttackGroups()
+        {
+            List<Tuple<int, Dictionary<int, int>>> returnValue = new List<Tuple<int, Dictionary<int, int>>>();
+            Dictionary<int, int> seed = new Dictionary<int, int>();
+            int seedBase = 0;
+            foreach (var singleAttackOption in AttackOption.Where(x=> x.MinNo > 0 && !(x is AttackOptionGroupBase)))
+            {
+                singleAttackOption.AddToSeed(ref seed);
+                seedBase += singleAttackOption.MinNo;
+            }
+            foreach (var singleAttackOption in AttackOption.Where(x => x.VarNo > 0))
+            {
+                if (singleAttackOption is AttackOptionGroupBase)
+                {
+
+                }
+                else
+                {
+                    Dictionary<int, Dictionary<int, int>> choices = singleAttackOption.AddToChoice();
+
+                    if (returnValue.Count == 0)
+                        returnValue = choices.ToDictionary(x => x.Key + seedBase, x => seed.Concat(x.Value).GroupBy(kvp => kvp.Key).ToDictionary(y => y.Key, y => y.Sum(kvp => kvp.Value))).Select(x => new Tuple<int, Dictionary<int, int>>(x.Key, x.Value)).ToList();
+                    else
+                    {
+                        List<Tuple<int, Dictionary<int, int>>> tempreturnValue = new List<Tuple<int, Dictionary<int, int>>>();
+                        foreach (var singleReturn in returnValue.Where(x => x.Item1 < MaxNo))
+                        {
+                            foreach (var choice in choices.Where(x => x.Key <= MaxNo - singleReturn.Item1))
+                            {
+                                tempreturnValue.Add(new Tuple<int, Dictionary<int, int>>(choice.Key + singleReturn.Item1, singleReturn.Item2.Concat(choice.Value).GroupBy(kvp => kvp.Key).ToDictionary(g => g.Key, g => g.Sum(kvp => kvp.Value))));
+                            }
+                        }
+                        returnValue = tempreturnValue.Concat(returnValue.Where(x => x.Item1 == MaxNo)).ToList();
+                    }
+
+                }
+            }
+            return returnValue.Where(x => x.Item1 == MaxNo).Select(x => x.Item2).Distinct();
         }
     }
 
@@ -128,6 +206,22 @@ namespace _40000_Statistics
         public override int Damage => AttacksTypes.FirstOrDefault()?.Damage ?? 0;
         public override string DamageExtra => AttacksTypes.FirstOrDefault()?.DamageExtra ?? null;
         public override Modifiers Modifiers => AttacksTypes.FirstOrDefault()?.Modifiers ?? Modifiers.None;
+
+        public AttackBase this[int index]
+        {
+            get
+            {
+                if (index < 0 || index >= AttacksTypes.Count)
+                    throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+                return AttacksTypes[index];
+            }
+            set
+            {
+                if (index < 0 || index >= AttacksTypes.Count)
+                    throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+                AttacksTypes[index] = value;
+            }
+        }
     }
 
     enum Modifiers

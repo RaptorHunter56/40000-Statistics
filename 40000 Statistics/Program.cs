@@ -56,6 +56,9 @@ namespace _40000_Statistics
                 Console.Write("Enter your choice: ");
                 string input = Console.ReadLine();
                 if (input == "0") break;
+
+                var tt = (AstraMilitarum.Units[0] as UnitBase)[9].GetAttackOptionGroupBase(9).GetAttackGroups();
+
                 int index = int.TryParse(input, out index) ? index - 1 : -1;
             }
         }
