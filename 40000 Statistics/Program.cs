@@ -49,17 +49,6 @@ namespace _40000_Statistics
 
             Console.Clear();
             Console.WriteLine("Select an option:");
-            Console.WriteLine(" 1. All Role Table");
-            Console.WriteLine(" 2. All Attack Table");
-            Console.WriteLine(" 3. All Damage Table");
-            Console.WriteLine(" 4. All Wound Table");
-            Console.WriteLine(" 5. All Save Table");
-            Console.WriteLine(" 6. All Damage Table");
-            Console.WriteLine(" 7. All Full Table");
-            Console.WriteLine("");
-            Console.WriteLine(" 8. All Full Kill Table");
-            Console.WriteLine(" 9. All Kill Table");
-            Console.WriteLine("10. All Kill Average Table");
             Console.WriteLine("0. Exit");
             Console.Write("Enter your choice: ");
             while (true)
@@ -67,35 +56,7 @@ namespace _40000_Statistics
                 Console.Write("Enter your choice: ");
                 string input = Console.ReadLine();
                 if (input == "0") break;
-
-                Action<Combat>[] actions = {
-                    c => c.RoleTable(),
-                    c => c.AttackBreakdownTable(),
-                    c => c.HitBreakdownTable(),
-                    c => c.WoundBreakdownTable(),
-                    c => c.SaveBreakdownTable(),
-                    c => c.DamageBreakdownTable(),
-                    c => c.FullBreakdownTable(),
-                    c => c.FullKillBreakdownTable(),
-                    c => c.KillBreakdownTable(),
-                    c => c.KillAverageTable()
-                };
-
                 int index = int.TryParse(input, out index) ? index - 1 : -1;
-                if (index >= 0 && index < actions.Length)
-                {
-                    actions[index](new Combat(Tau.Units[2], AstraMilitarum.Units[0]));
-                    actions[index](new Combat(Tau.Units[2], AstraMilitarum.Units[1]));
-                    actions[index](new Combat(Tau.Units[2], AstraMilitarum.Units[2]));
-                    //foreach (var item in Tau.Units)
-                    //{
-                    //    actions[index](new Combat(item, AstraMilitarum.Units[0]));
-                    //    actions[index](new Combat(item, AstraMilitarum.Units[1]));
-                    //    actions[index](new Combat(item, AstraMilitarum.Units[2]));
-                    //}
-                }
-                else
-                    Console.WriteLine("Invalid option. Please try again.");
             }
         }
     }
