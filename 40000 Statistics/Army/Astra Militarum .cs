@@ -47,10 +47,9 @@ namespace _40000_Statistics
                                     new AttackGroupBase(1, 0) { Attacks = new int[] { 2, 5 } },
                                     new AttackGroupBase(1, 0) { Attacks = new int[] { 4, 5 } }
                                 }
-
+                            
                             },
-                            new AttackGroupBase(9, 7) { Attacks = new int[] { 3, 5 } },
-                            new AttackGroupBase(1, 0) { Attacks = new int[] { 2, 4 } }
+                            new AttackGroupBase(9, 7) { Attacks = new int[] { 3, 5 } }
                         }
                     } },
                     { 1, new ModelBase() { Name = "Shock Trooper Sergeant", Movement = 6, Toughness = 3, ArmorSave = 5, Wounds = 1, Leadership = 7, ObjectiveControl = 2,

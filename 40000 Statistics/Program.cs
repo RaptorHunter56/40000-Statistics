@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ConsoleTables;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -50,6 +51,8 @@ namespace _40000_Statistics
             Console.Clear();
             Console.WriteLine("Select an option:");
             Console.WriteLine("0. Exit");
+            Console.WriteLine("1. Tau");
+            Console.WriteLine("2. Astra Militarum");
             Console.Write("Enter your choice: ");
             while (true)
             {
@@ -57,9 +60,26 @@ namespace _40000_Statistics
                 string input = Console.ReadLine();
                 if (input == "0") break;
 
-                var tt = (AstraMilitarum.Units[0] as UnitBase)[9].GetAttackOptionGroupBase(9).GetAttackGroups();
+                foreach (var tau in (input == "1" ? Tau.Units : AstraMilitarum.Units))
+                {
+                    UnitBase unitBase;
+                    if (tau is UnitBase)
+                        unitBase = (UnitBase)tau;
+                    else
+                        unitBase = new UnitBase(tau);
+                    var attackOptions = unitBase.GetAttackOptionGroupBase();
+                    foreach (var attackProfile in attackOptions)
+                    {
+                        var attackGroup = attackProfile.GetAttackGroups();
 
-                int index = int.TryParse(input, out index) ? index - 1 : -1;
+                        var table = new ConsoleTable("Index", "Values");
+                        foreach (var dict in attackGroup)
+                        { 
+                            table.AddRow(dict.Item1, string.Join(", ", dict.Item2.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}: {kvp.Value}"))); 
+                        }
+                        table.Write();
+                    }
+                }
             }
         }
     }

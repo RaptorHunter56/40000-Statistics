@@ -19,6 +19,7 @@ namespace _40000_Statistics
     internal class ModelBase
     {
         public string Name { get; set; }
+        public virtual int ModelNo { get; set; }
         public virtual int Movement { get; set; }
         public virtual int Toughness { get; set; }
         public virtual int ArmorSave { get; set; }
@@ -54,7 +55,7 @@ namespace _40000_Statistics
             return hash;
         }
 
-        internal AttackOptionGroupBase GetAttackOptionGroupBase(int unitNo) => new AttackOptionGroupBase(AttackGroups, unitNo);
+        public AttackOptionGroupBase GetAttackOptionGroupBase() => new AttackOptionGroupBase(AttackGroups);
 
         public static bool operator ==(ModelBase left, ModelBase right) => left is null ? right is null : left.Equals(right);
         public static bool operator !=(ModelBase left, ModelBase right) => !(left == right);
@@ -65,6 +66,7 @@ namespace _40000_Statistics
         public UnitBase() => Models = new Dictionary<int, ModelBase>();
         public UnitBase(ModelBase model) => Models = new Dictionary<int, ModelBase> { { 1, model } };
         public override string ToString() => Name;
+        public override int ModelNo => Models?.Keys.Sum() ?? 1;
         public override int Movement => Models.Values.FirstOrDefault()?.Movement ?? 0;
         public override int Toughness => Models.Values.FirstOrDefault()?.Toughness ?? 0;
         public override int ArmorSave => Models.Values.FirstOrDefault()?.ArmorSave ?? 0;
@@ -72,6 +74,8 @@ namespace _40000_Statistics
         public override int Wounds => Models.Values.FirstOrDefault()?.Wounds ?? 0;
         public override int Leadership => Models.Values.FirstOrDefault()?.Leadership ?? 0;
         public override int ObjectiveControl => Models.Values.FirstOrDefault()?.ObjectiveControl ?? 0;
+
+        public new IEnumerable<AttackOptionGroupBase> GetAttackOptionGroupBase() => Models.Select(x => new AttackOptionGroupBase(x.Value.AttackGroups, x.Key));
 
         public ModelBase this[int key]
         {
@@ -89,28 +93,41 @@ namespace _40000_Statistics
 
     internal class AttackGroupBase
     {
-        public int MinNo { get; set; }
-        public int MaxNo { get; set; }
-        public int VarNo { get => MaxNo - MinNo; }
+        private int minNo;
+        private int maxNo;
+        virtual public int MinNo { get => minNo; set => minNo = value; }
+        virtual public int MaxNo { get => maxNo; set => maxNo = value; }
         public int[] Attacks { get; set; }
 
         public AttackGroupBase(int maxNo = 1, int? minNo = null) { MinNo = minNo??maxNo; MaxNo = maxNo; }
 
-        public void AddToSeed(ref Dictionary<int, int> seed, int? multiply = null)
+        internal List<Tuple<int, Dictionary<int, int>>> GenerateSmallCombinations(AttackGroupBase attackGroup)
         {
-            foreach (var Attack in Attacks)
+            var smallCombinations = new List<Tuple<int, Dictionary<int, int>>>();
+            for (int count = attackGroup.MinNo; count <= attackGroup.MaxNo; count++)
             {
-                seed[Attack] = seed.ContainsKey(Attack) ? seed[Attack] + multiply ?? MinNo : multiply ?? MinNo;
+                var combinations = new Dictionary<int, int>();
+                foreach (var attack in attackGroup.Attacks)
+                {
+                    combinations[attack] = count;
+                }
+                smallCombinations.Add(new Tuple<int, Dictionary<int, int>>(count, combinations));
             }
+            return smallCombinations;
         }
-        public Dictionary<int, Dictionary<int, int>> AddToChoice()
+        internal List<Tuple<int, Dictionary<int, int>>> MergeCombinations(IEnumerable<Tuple<int, Dictionary<int, int>>> allCombinations, IEnumerable<Tuple<int, Dictionary<int, int>>> newCombinations, bool wargear = false)
         {
-            return Enumerable.Range(0, VarNo + 1).Select((value, index) =>
+            if (allCombinations.Count() == 0) return newCombinations.ToList();
+
+            var mergedCombinations = new List<Tuple<int, Dictionary<int, int>>>();
+            foreach (var dictionary in allCombinations)
             {
-                Dictionary<int, int> output = new Dictionary<int, int>();
-                AddToSeed(ref output, value);
-                return new { Index = value, Value = output };
-            }).ToDictionary(x => x.Index, x => x.Value);
+                foreach (var combination in newCombinations)
+                {
+                    mergedCombinations.Add(new Tuple<int, Dictionary<int, int>>(dictionary.Item1 + (wargear ? 0 : combination.Item1), dictionary.Item2.CoJoin(combination.Item2, (value1, value2) => value1 + value2)));
+                }
+            }
+            return mergedCombinations;
         }
     }
     internal class AttackOptionGroupBase : AttackGroupBase
@@ -124,50 +141,45 @@ namespace _40000_Statistics
             this.MinNo = attackGroup.MinNo;
             this.MaxNo = attackGroup.MaxNo;
         }
-        public AttackOptionGroupBase(List<AttackGroupBase> attackGroupBases, int maxNo = 1, int? minNo = null) : base(maxNo, minNo)
-        {
-            AttackOption = attackGroupBases;
-        }
+        public AttackOptionGroupBase(List<AttackGroupBase> attackGroupBases, int maxNo = 1, int? minNo = null) : base(maxNo, minNo) => AttackOption = attackGroupBases;
 
-        public IEnumerable<Dictionary<int, int>> GetAttackGroups()
+        public List<Tuple<int, Dictionary<int, int>>> GetAttackGroups()
         {
-            List<Tuple<int, Dictionary<int, int>>> returnValue = new List<Tuple<int, Dictionary<int, int>>>();
-            Dictionary<int, int> seed = new Dictionary<int, int>();
-            int seedBase = 0;
-            foreach (var singleAttackOption in AttackOption.Where(x=> x.MinNo > 0 && !(x is AttackOptionGroupBase)))
+            var allCombinations = new List<Tuple<int,Dictionary<int, int>>>();
+
+            foreach (var options in AttackOption)
             {
-                singleAttackOption.AddToSeed(ref seed);
-                seedBase += singleAttackOption.MinNo;
-            }
-            foreach (var singleAttackOption in AttackOption.Where(x => x.VarNo > 0))
-            {
-                if (singleAttackOption is AttackOptionGroupBase)
+                if (options.GetType() == typeof(AttackGroupBase))
                 {
-
+                    var smallCombinations = GenerateSmallCombinations(options);
+                    allCombinations = MergeCombinations(allCombinations, smallCombinations);
                 }
-                else
+                else if (options.GetType() == typeof(AttackOptionGroupBase))
                 {
-                    Dictionary<int, Dictionary<int, int>> choices = singleAttackOption.AddToChoice();
-
-                    if (returnValue.Count == 0)
-                        returnValue = choices.ToDictionary(x => x.Key + seedBase, x => seed.Concat(x.Value).GroupBy(kvp => kvp.Key).ToDictionary(y => y.Key, y => y.Sum(kvp => kvp.Value))).Select(x => new Tuple<int, Dictionary<int, int>>(x.Key, x.Value)).ToList();
-                    else
+                    foreach (var attackOption in ((AttackOptionGroupBase)options).AttackOption)
                     {
-                        List<Tuple<int, Dictionary<int, int>>> tempreturnValue = new List<Tuple<int, Dictionary<int, int>>>();
-                        foreach (var singleReturn in returnValue.Where(x => x.Item1 < MaxNo))
-                        {
-                            foreach (var choice in choices.Where(x => x.Key <= MaxNo - singleReturn.Item1))
-                            {
-                                tempreturnValue.Add(new Tuple<int, Dictionary<int, int>>(choice.Key + singleReturn.Item1, singleReturn.Item2.Concat(choice.Value).GroupBy(kvp => kvp.Key).ToDictionary(g => g.Key, g => g.Sum(kvp => kvp.Value))));
-                            }
-                        }
-                        returnValue = tempreturnValue.Concat(returnValue.Where(x => x.Item1 == MaxNo)).ToList();
-                    }
+                        var tempAttackGroups = (attackOption.GetType() == typeof(AttackGroupBase))
+                            ? new AttackOptionGroupBase(attackOption).GetAttackGroups()
+                            : ((AttackOptionGroupBase)attackOption).GetAttackGroups();
 
+                        allCombinations = MergeCombinations(allCombinations, tempAttackGroups);
+                    }
                 }
             }
-            return returnValue.Where(x => x.Item1 == MaxNo).Select(x => x.Item2).Distinct();
+            var output = allCombinations.Where(tuple => tuple.Item1 >= MinNo && tuple.Item1 <= MaxNo).Select(combination => new Tuple<int, Dictionary<int, int>>(combination.Item1, combination.Item2.Where(kvp => kvp.Value != 0).Distinct().ToDictionary(kvp => kvp.Key, kvp => kvp.Value)));
+            if (AttackOption.Where(attack => attack.GetType() == typeof(WargearGroupBase)).Count() > 0)
+            {
+                var wargearList = AttackOption.Where(attack => attack.GetType() == typeof(WargearGroupBase)).Select(attack => GenerateSmallCombinations(attack));
+                foreach (var wargear in wargearList)
+                { output = MergeCombinations(output, wargear, true); }
+                output = output.Select(combination => new Tuple<int, Dictionary<int, int>>(combination.Item1, combination.Item2.Where(kvp => kvp.Value != 0).Distinct().ToDictionary(kvp => kvp.Key, kvp => kvp.Value)));
+            }
+            return output.ToList();
         }
+    }
+    internal class WargearGroupBase : AttackGroupBase
+    {
+        public WargearGroupBase(int maxNo = 1, int? minNo = null) : base(maxNo, minNo) { }
     }
 
     internal class AttackBase
@@ -238,5 +250,29 @@ namespace _40000_Statistics
         Indirect_Fire   = 1 << 8,
         Ignores_Cover   = 1 << 9,
         Torrent         = 1 << 10
+    }
+
+    public static class DictionaryExtensions
+    {
+        public static Dictionary<TKey, TResult> CoJoin<TKey, TValue, TResult>(
+            this Dictionary<TKey, TValue> first,
+            Dictionary<TKey, TValue> second,
+            Func<TValue, TValue, TResult> joinFunc)
+        {
+            var result = new Dictionary<TKey, TResult>();
+            foreach (var kvp in first)
+            {
+                if (second.TryGetValue(kvp.Key, out var secondValue))
+                    result[kvp.Key] = joinFunc(kvp.Value, secondValue);
+                else
+                    result[kvp.Key] = (TResult)(object)kvp.Value;
+            }
+            foreach (var kvp in second)
+            {
+                if (!result.ContainsKey(kvp.Key))
+                    result[kvp.Key] = (TResult)(object)kvp.Value;
+            }
+            return result;
+        }
     }
 }
