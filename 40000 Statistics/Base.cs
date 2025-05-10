@@ -12,12 +12,15 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static _40000_Statistics.DictionaryExtensions;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace _40000_Statistics
 {
-    internal class ModelBase
+    public class ModelBase
     {
+        private bool complexAttacks = false;
+
         public string Name { get; set; }
         public virtual int ModelNo { get; set; }
         public virtual int Movement { get; set; }
@@ -27,6 +30,8 @@ namespace _40000_Statistics
         public virtual int Wounds { get; set; }
         public virtual int Leadership { get; set; }
         public virtual int ObjectiveControl { get; set; }
+        public virtual List<string> Keywords { get; set; }
+        public virtual bool ComplexAttacks { get => complexAttacks; set => complexAttacks = value; }
         public List<AttackBase> Attacks { get; set; }
         public List<AttackGroupBase> AttackGroups { get; set; }
         public ModelBase() { 
@@ -59,13 +64,15 @@ namespace _40000_Statistics
 
         public static bool operator ==(ModelBase left, ModelBase right) => left is null ? right is null : left.Equals(right);
         public static bool operator !=(ModelBase left, ModelBase right) => !(left == right);
+
+        public static List<string> CreateKeywordList(params object[] items) => items.Select(item => item is string s ? s : item.ToString()).ToList();
     }
-    internal class UnitBase : ModelBase 
+    public class UnitBase : ModelBase 
     { 
         public Dictionary<int, ModelBase> Models { get; set; }
         public UnitBase() => Models = new Dictionary<int, ModelBase>();
         public UnitBase(ModelBase model) => Models = new Dictionary<int, ModelBase> { { 1, model } };
-        public override string ToString() => Name;
+        public override string ToString() => Name ?? Models.Values.FirstOrDefault()?.Name ?? "None";
         public override int ModelNo => Models?.Keys.Sum() ?? 1;
         public override int Movement => Models.Values.FirstOrDefault()?.Movement ?? 0;
         public override int Toughness => Models.Values.FirstOrDefault()?.Toughness ?? 0;
@@ -74,8 +81,19 @@ namespace _40000_Statistics
         public override int Wounds => Models.Values.FirstOrDefault()?.Wounds ?? 0;
         public override int Leadership => Models.Values.FirstOrDefault()?.Leadership ?? 0;
         public override int ObjectiveControl => Models.Values.FirstOrDefault()?.ObjectiveControl ?? 0;
+        public override List<string> Keywords => Models.Values.FirstOrDefault()?.Keywords ?? new List<string>();
 
-        public new IEnumerable<AttackOptionGroupBase> GetAttackOptionGroupBase() => Models.Select(x => new AttackOptionGroupBase(x.Value.AttackGroups, x.Key));
+        public new IEnumerable<AttackOptionGroupBase> GetAttackOptionGroupBase() => Models.Select(model => {
+            var (max, min) = GetAttackMaxMin(model);
+            return new AttackOptionGroupBase(model.Value.AttackGroups, max, min);
+        });
+        public Tuple<int, int?> GetAttackMaxMin(KeyValuePair<int, ModelBase> model)
+        {
+            if (model.Value.ComplexAttacks)
+                return new Tuple<int, int?>(model.Value.AttackGroups.Where(attack => attack.GetType() != typeof(WargearGroupBase)).Select(attack => attack.MaxNo == attack.MinNo ? attack.MaxNo : attack.MaxNo - attack.MinNo).Sum(), model.Value.AttackGroups.Select(attack => attack.MinNo).Sum());
+            else
+                return new Tuple<int, int?>(model.Key, null);
+        }
 
         public ModelBase this[int key]
         {
@@ -91,7 +109,7 @@ namespace _40000_Statistics
         }
     }
 
-    internal class AttackGroupBase
+    public class AttackGroupBase
     {
         private int minNo;
         private int maxNo;
@@ -101,7 +119,7 @@ namespace _40000_Statistics
 
         public AttackGroupBase(int maxNo = 1, int? minNo = null) { MinNo = minNo??maxNo; MaxNo = maxNo; }
 
-        internal List<Tuple<int, Dictionary<int, int>>> GenerateSmallCombinations(AttackGroupBase attackGroup)
+        public List<Tuple<int, Dictionary<int, int>>> GenerateSmallCombinations(AttackGroupBase attackGroup)
         {
             var smallCombinations = new List<Tuple<int, Dictionary<int, int>>>();
             for (int count = attackGroup.MinNo; count <= attackGroup.MaxNo; count++)
@@ -109,13 +127,13 @@ namespace _40000_Statistics
                 var combinations = new Dictionary<int, int>();
                 foreach (var attack in attackGroup.Attacks)
                 {
-                    combinations[attack] = count;
+                    combinations[attack] = combinations.ContainsKey(attack) ? combinations[attack] + count : count;
                 }
                 smallCombinations.Add(new Tuple<int, Dictionary<int, int>>(count, combinations));
             }
             return smallCombinations;
         }
-        internal List<Tuple<int, Dictionary<int, int>>> MergeCombinations(IEnumerable<Tuple<int, Dictionary<int, int>>> allCombinations, IEnumerable<Tuple<int, Dictionary<int, int>>> newCombinations, bool wargear = false)
+        public List<Tuple<int, Dictionary<int, int>>> MergeCombinations(IEnumerable<Tuple<int, Dictionary<int, int>>> allCombinations, IEnumerable<Tuple<int, Dictionary<int, int>>> newCombinations, bool wargear = false)
         {
             if (allCombinations.Count() == 0) return newCombinations.ToList();
 
@@ -130,7 +148,7 @@ namespace _40000_Statistics
             return mergedCombinations;
         }
     }
-    internal class AttackOptionGroupBase : AttackGroupBase
+    public class AttackOptionGroupBase : AttackGroupBase
     {
         public AttackOptionGroupBase(int maxNo = 1, int? minNo = null) : base(maxNo, minNo) { }
         public List<AttackGroupBase> AttackOption { get; set; }
@@ -143,7 +161,17 @@ namespace _40000_Statistics
         }
         public AttackOptionGroupBase(List<AttackGroupBase> attackGroupBases, int maxNo = 1, int? minNo = null) : base(maxNo, minNo) => AttackOption = attackGroupBases;
 
-        public List<Tuple<int, Dictionary<int, int>>> GetAttackGroups()
+        public static List<Tuple<int, Dictionary<int, int>>> GetAttackGroups(IEnumerable<AttackOptionGroupBase> attackOptions)
+        {
+            List<Tuple<int, Dictionary<int, int>>> outAttackGroupsList = null;
+            foreach (var option in attackOptions)
+            {
+                var attackGroupsSingle = option.GetAttackGroupsSingle();
+                outAttackGroupsList = outAttackGroupsList == null ? attackGroupsSingle : outAttackGroupsList.SelectMany(o => attackGroupsSingle, (o, t) => new Tuple<int, Dictionary<int, int>>(o.Item1 + t.Item1, o.Item2.CoJoin(t.Item2, (v1, v2) => v1 + v2).OrderBy(kvp => kvp.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value))).ToList();
+            }
+            return outAttackGroupsList.Distinct(new TupleComparer()).ToList() ?? new List<Tuple<int, Dictionary<int, int>>>();
+        }
+        public List<Tuple<int, Dictionary<int, int>>> GetAttackGroupsSingle()
         {
             var allCombinations = new List<Tuple<int,Dictionary<int, int>>>();
 
@@ -159,14 +187,14 @@ namespace _40000_Statistics
                     foreach (var attackOption in ((AttackOptionGroupBase)options).AttackOption)
                     {
                         var tempAttackGroups = (attackOption.GetType() == typeof(AttackGroupBase))
-                            ? new AttackOptionGroupBase(attackOption).GetAttackGroups()
-                            : ((AttackOptionGroupBase)attackOption).GetAttackGroups();
+                            ? new AttackOptionGroupBase(attackOption).GetAttackGroupsSingle()
+                            : ((AttackOptionGroupBase)attackOption).GetAttackGroupsSingle();
 
                         allCombinations = MergeCombinations(allCombinations, tempAttackGroups);
                     }
                 }
             }
-            var output = allCombinations.Where(tuple => tuple.Item1 >= MinNo && tuple.Item1 <= MaxNo).Select(combination => new Tuple<int, Dictionary<int, int>>(combination.Item1, combination.Item2.Where(kvp => kvp.Value != 0).Distinct().ToDictionary(kvp => kvp.Key, kvp => kvp.Value)));
+            var output = allCombinations.Where(tuple => tuple.Item1 >= MinNo && tuple.Item1 <= MaxNo).Select(combination => new Tuple<int, Dictionary<int, int>>(combination.Item1, combination.Item2.Where(kvp => kvp.Value != 0).Distinct().ToDictionary(kvp => kvp.Key, kvp => kvp.Value).OrderBy(kvp => kvp.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)));
             if (AttackOption.Where(attack => attack.GetType() == typeof(WargearGroupBase)).Count() > 0)
             {
                 var wargearList = AttackOption.Where(attack => attack.GetType() == typeof(WargearGroupBase)).Select(attack => GenerateSmallCombinations(attack));
@@ -177,12 +205,12 @@ namespace _40000_Statistics
             return output.ToList();
         }
     }
-    internal class WargearGroupBase : AttackGroupBase
+    public class WargearGroupBase : AttackGroupBase
     {
         public WargearGroupBase(int maxNo = 1, int? minNo = null) : base(maxNo, minNo) { }
     }
 
-    internal class AttackBase
+    public class AttackBase
     {
         public virtual string Name { get; set; }
         public virtual int Range { get; set; }
@@ -199,7 +227,7 @@ namespace _40000_Statistics
         public AttackBase() { }
         public override string ToString() => $"{Name} - A {AttacksExtra ?? Attacks.ToString()}";
     }
-    internal class AttackOption : AttackBase
+    public class AttackOption : AttackBase
     {
         public string SubType { get; set; }
         public List<AttackBase> AttacksTypes { get; set; }
@@ -236,7 +264,7 @@ namespace _40000_Statistics
         }
     }
 
-    enum Modifiers
+    public enum Modifiers
     {
         None            = 0,
         Anti_Monster_4  = 1 << 0,
@@ -249,7 +277,30 @@ namespace _40000_Statistics
         Blast           = 1 << 7,
         Indirect_Fire   = 1 << 8,
         Ignores_Cover   = 1 << 9,
-        Torrent         = 1 << 10
+        Torrent         = 1 << 10,
+        Heavy           = 1 << 11,
+        Precision       = 1 << 12,
+        Lance           = 1 << 13,
+        Extra_Attacks   = 1 << 14,
+        Anti_Infantry_3 = 1 << 15,
+        Lethal_Hits = 1 << 16
+    }
+    public enum Keywords
+    {
+        Infantry, 
+        Character, 
+        Grenades, 
+        Vehicle, 
+        Walker, 
+        Fly, 
+        Epic_Hero, 
+        Battlesuit,
+        Markerlight,
+        Kroot,
+        Shaper,
+        Mounted,
+        Battleline,
+        Fire_Warrior
     }
 
     public static class DictionaryExtensions
@@ -273,6 +324,31 @@ namespace _40000_Statistics
                     result[kvp.Key] = (TResult)(object)kvp.Value;
             }
             return result;
+        }
+        public class TupleComparer : IEqualityComparer<Tuple<int, Dictionary<int, int>>>
+        {
+            public bool Equals(Tuple<int, Dictionary<int, int>> x, Tuple<int, Dictionary<int, int>> y)
+            {
+                if (x.Item1 != y.Item1) return false;
+                if (x.Item2.Count != y.Item2.Count) return false;
+                foreach (var kvp in x.Item2)
+                {
+                    if (!y.Item2.TryGetValue(kvp.Key, out var value) || value != kvp.Value)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            public int GetHashCode(Tuple<int, Dictionary<int, int>> obj)
+            {
+                int hash = obj.Item1.GetHashCode();
+                foreach (var kvp in obj.Item2)
+                {
+                    hash ^= kvp.Key.GetHashCode() ^ kvp.Value.GetHashCode();
+                }
+                return hash;
+            }
         }
     }
 }

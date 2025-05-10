@@ -29,6 +29,7 @@ namespace _40000_Statistics
         const uint WS_POPUP = 0x80000000; // Change to uint
         const uint WS_VISIBLE = 0x10000000; // Change to uint
         #endregion
+        private const int Count = 10;
         static void Main(string[] args)
         {
             #region Fullscreen
@@ -49,14 +50,14 @@ namespace _40000_Statistics
             bool running = true;
 
             Console.Clear();
-            Console.WriteLine("Select an option:");
-            Console.WriteLine("0. Exit");
-            Console.WriteLine("1. Tau");
-            Console.WriteLine("2. Astra Militarum");
-            Console.Write("Enter your choice: ");
+            Console.WriteLine(" Select an option:");
+            Console.WriteLine(" 0. Exit");
+            Console.WriteLine(" 1. Tau");
+            Console.WriteLine(" 2. Astra Militarum");
+            Console.Write(" Enter your choice: ");
             while (true)
             {
-                Console.Write("Enter your choice: ");
+                Console.Write(" Enter your choice: ");
                 string input = Console.ReadLine();
                 if (input == "0") break;
 
@@ -67,18 +68,18 @@ namespace _40000_Statistics
                         unitBase = (UnitBase)tau;
                     else
                         unitBase = new UnitBase(tau);
+                    Console.WriteLine(" " + unitBase);
                     var attackOptions = unitBase.GetAttackOptionGroupBase();
-                    foreach (var attackProfile in attackOptions)
+                    var attackGroup = AttackOptionGroupBase.GetAttackGroups(attackOptions);
+                    Console.WriteLine(" Choice No: " + attackGroup.Count);
+                    var table = new ConsoleTable("Index", "Values");
+                    foreach (var dict in attackGroup.Take(Count))
                     {
-                        var attackGroup = attackProfile.GetAttackGroups();
-
-                        var table = new ConsoleTable("Index", "Values");
-                        foreach (var dict in attackGroup)
-                        { 
-                            table.AddRow(dict.Item1, string.Join(", ", dict.Item2.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}: {kvp.Value}"))); 
-                        }
-                        table.Write();
+                        table.AddRow(dict.Item1, string.Join(", ", dict.Item2.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}: {kvp.Value}")));
                     }
+                    if (Count < attackGroup.Count)
+                        table.AddRow("...", "...");
+                    table.Write();
                 }
             }
         }
