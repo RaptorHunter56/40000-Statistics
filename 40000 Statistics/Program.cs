@@ -70,7 +70,7 @@ namespace _40000_Statistics
                         unitBase = new UnitBase(tau);
                     Console.WriteLine(" " + unitBase);
                     var attackOptions = unitBase.GetAttackOptionGroupBase();
-                    var attackGroup = AttackOptionGroupBase.GetAttackGroups(attackOptions);
+                    var attackGroup = AttackOptionGroupBase.GetAttackGroups(attackOptions, unitBase);
                     Console.WriteLine(" Choice No: " + attackGroup.Count);
                     var table = new ConsoleTable("Index", "Values");
                     foreach (var dict in attackGroup.Take(Count))

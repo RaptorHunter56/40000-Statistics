@@ -17,7 +17,38 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace _40000_Statistics
 {
-    public class ModelBase
+    public enum EffectsType
+    {
+        /// <summary>
+        /// Func<List<Tuple<int, Dictionary<int, int>>>, List<Tuple<int, Dictionary<int, int>>>>
+        /// </summary>
+        AttackOption = 0,
+        Type1 = 1,
+        Type2 = 2,
+        Type3 = 3,
+    }
+    public abstract class DelegatesBase
+    {
+        public Dictionary<EffectsType, List<Delegate>> Effects { get; } = new Dictionary<EffectsType, List<Delegate>>();
+        public KeyValuePair<EffectsType, List<Delegate>> CreateEffects
+        {
+            set
+            {
+                List<Delegate> delegatesList = value.Value ?? new List<Delegate>();
+                foreach (var del in delegatesList)
+                {
+                    AddEffect(value.Key, del);
+                }
+            }
+        }
+        public void AddEffect(EffectsType type, Delegate del)
+        {
+            if (!Effects.ContainsKey(type))
+                Effects[type] = new List<Delegate>();
+            Effects[type].Add(del);
+        }
+    }
+    public class ModelBase : DelegatesBase
     {
         private bool complexAttacks = false;
 
@@ -81,7 +112,7 @@ namespace _40000_Statistics
         public override int Wounds => Models.Values.FirstOrDefault()?.Wounds ?? 0;
         public override int Leadership => Models.Values.FirstOrDefault()?.Leadership ?? 0;
         public override int ObjectiveControl => Models.Values.FirstOrDefault()?.ObjectiveControl ?? 0;
-        public override List<string> Keywords => Models.Values.FirstOrDefault()?.Keywords ?? new List<string>();
+        public override List<string> Keywords => Models.Values.SelectMany(x => x.Keywords).Distinct().ToList() ?? new List<string>();
 
         public new IEnumerable<AttackOptionGroupBase> GetAttackOptionGroupBase() => Models.Select(model => {
             var (max, min) = GetAttackMaxMin(model);
@@ -109,7 +140,7 @@ namespace _40000_Statistics
         }
     }
 
-    public class AttackGroupBase
+    public class AttackGroupBase : DelegatesBase
     {
         private int minNo;
         private int maxNo;
@@ -161,7 +192,7 @@ namespace _40000_Statistics
         }
         public AttackOptionGroupBase(List<AttackGroupBase> attackGroupBases, int maxNo = 1, int? minNo = null) : base(maxNo, minNo) => AttackOption = attackGroupBases;
 
-        public static List<Tuple<int, Dictionary<int, int>>> GetAttackGroups(IEnumerable<AttackOptionGroupBase> attackOptions)
+        public static List<Tuple<int, Dictionary<int, int>>> GetAttackGroups(IEnumerable<AttackOptionGroupBase> attackOptions, DelegatesBase Effects = null)
         {
             List<Tuple<int, Dictionary<int, int>>> outAttackGroupsList = null;
             foreach (var option in attackOptions)
@@ -169,7 +200,10 @@ namespace _40000_Statistics
                 var attackGroupsSingle = option.GetAttackGroupsSingle();
                 outAttackGroupsList = outAttackGroupsList == null ? attackGroupsSingle : outAttackGroupsList.SelectMany(o => attackGroupsSingle, (o, t) => new Tuple<int, Dictionary<int, int>>(o.Item1 + t.Item1, o.Item2.CoJoin(t.Item2, (v1, v2) => v1 + v2).OrderBy(kvp => kvp.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value))).ToList();
             }
-            return outAttackGroupsList.Distinct(new TupleComparer()).ToList() ?? new List<Tuple<int, Dictionary<int, int>>>();
+            outAttackGroupsList = outAttackGroupsList.Distinct(new TupleComparer()).ToList() ?? new List<Tuple<int, Dictionary<int, int>>>();
+            if (Effects.Effects != null && Effects.Effects.Any(x => x.Key == EffectsType.AttackOption))
+                outAttackGroupsList = Effects.Effects.Where(x => x.Key == EffectsType.AttackOption).SelectMany(x => x.Value).ToList().Aggregate(outAttackGroupsList, (current, del) => (List<Tuple<int, Dictionary<int, int>>>)del.DynamicInvoke(current));
+            return outAttackGroupsList;
         }
         public List<Tuple<int, Dictionary<int, int>>> GetAttackGroupsSingle()
         {
@@ -210,7 +244,7 @@ namespace _40000_Statistics
         public WargearGroupBase(int maxNo = 1, int? minNo = null) : base(maxNo, minNo) { }
     }
 
-    public class AttackBase
+    public class AttackBase : DelegatesBase
     {
         public virtual string Name { get; set; }
         public virtual int Range { get; set; }
@@ -266,41 +300,43 @@ namespace _40000_Statistics
 
     public enum Modifiers
     {
-        None            = 0,
-        Anti_Monster_4  = 1 << 0,
-        Assault         = 1 << 1,
-        Hazardous       = 1 << 2,
-        Melta_2         = 1 << 3,
-        Pistol          = 1 << 4,
-        Rapid_Fire_1    = 1 << 5,
-        Twin_Linked     = 1 << 6,
-        Blast           = 1 << 7,
-        Indirect_Fire   = 1 << 8,
-        Ignores_Cover   = 1 << 9,
-        Torrent         = 1 << 10,
-        Heavy           = 1 << 11,
-        Precision       = 1 << 12,
-        Lance           = 1 << 13,
-        Extra_Attacks   = 1 << 14,
-        Anti_Infantry_3 = 1 << 15,
-        Lethal_Hits = 1 << 16
+        None               = 0,
+        Anti_Monster_4     = 1 << 0,
+        Assault            = 1 << 1,
+        Hazardous          = 1 << 2,
+        Melta_2            = 1 << 3,
+        Pistol             = 1 << 4,
+        Rapid_Fire_1       = 1 << 5,
+        Twin_Linked        = 1 << 6,
+        Blast              = 1 << 7,
+        Indirect_Fire      = 1 << 8,
+        Ignores_Cover      = 1 << 9,
+        Torrent            = 1 << 10,
+        Heavy              = 1 << 11,
+        Precision          = 1 << 12,
+        Lance              = 1 << 13,
+        Extra_Attacks      = 1 << 14,
+        Anti_Infantry_3    = 1 << 15,
+        Lethal_Hits        = 1 << 16,
+        Anti_Vehicle_4     = 1 << 17,
+        Devastating_Wounds = 1 << 18
     }
     public enum Keywords
     {
-        Infantry, 
-        Character, 
-        Grenades, 
-        Vehicle, 
-        Walker, 
-        Fly, 
-        Epic_Hero, 
-        Battlesuit,
-        Markerlight,
-        Kroot,
-        Shaper,
-        Mounted,
-        Battleline,
-        Fire_Warrior
+        Infantry     = 0,
+        Character    = 1 << 0, 
+        Grenades     = 1 << 1, 
+        Vehicle      = 1 << 2, 
+        Walker       = 1 << 3, 
+        Fly          = 1 << 4, 
+        Epic_Hero    = 1 << 5, 
+        Battlesuit   = 1 << 6,
+        Markerlight  = 1 << 7,
+        Kroot        = 1 << 9,
+        Shaper       = 1 << 10,
+        Mounted      = 1 << 11,
+        Battleline   = 1 << 12,
+        Fire_Warrior = 1 << 13
     }
 
     public static class DictionaryExtensions
