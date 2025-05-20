@@ -68,6 +68,7 @@ namespace _40000_Statistics
         public ModelBase() { 
             Attacks = new List<AttackBase>();
             AttackGroups = new List<AttackGroupBase>();
+            ModelNo = 1;
         }
         public override string ToString() => Name;
         public override bool Equals(object obj)
@@ -102,7 +103,7 @@ namespace _40000_Statistics
     { 
         public Dictionary<int, ModelBase> Models { get; set; }
         public UnitBase() => Models = new Dictionary<int, ModelBase>();
-        public UnitBase(ModelBase model) => Models = new Dictionary<int, ModelBase> { { 1, model } };
+        public UnitBase(ModelBase model) => Models = new Dictionary<int, ModelBase> { { model.ModelNo, model } };
         public override string ToString() => Name ?? Models.Values.FirstOrDefault()?.Name ?? "None";
         public override int ModelNo => Models?.Keys.Sum() ?? 1;
         public override int Movement => Models.Values.FirstOrDefault()?.Movement ?? 0;
@@ -319,7 +320,9 @@ namespace _40000_Statistics
         Anti_Infantry_3    = 1 << 15,
         Lethal_Hits        = 1 << 16,
         Anti_Vehicle_4     = 1 << 17,
-        Devastating_Wounds = 1 << 18
+        Devastating_Wounds = 1 << 18,
+        Sustained_Hits_1   = 1 << 19,
+        Rapid_Fire_2       = 1 << 20
     }
     public enum Keywords
     {

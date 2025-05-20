@@ -40,6 +40,12 @@ namespace _40000_Statistics
             {"Stealth Battlesuits - 5",          60},
             {"Vespid Stingwings - 5",            65},
             {"Vespid Stingwings - 10",           65},
+            // Mounted
+            {"Krootox Rampagers - 3",            85},
+            {"Krootox Rampagers - 6",            170},
+            {"Krootox Riders - 1",               40},
+            {"Krootox Riders - 2",               60},
+            {"Krootox Riders - 3",               90},
         };
         public static List<ModelBase> Units = new List<ModelBase>()
         {
@@ -294,13 +300,13 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 9, new ModelBase() { Name = "Breacher Fire Warriors", Movement = 6, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 2,
+                    { 9, new ModelBase() { ModelNo = 9, Name = "Breacher Fire Warriors", Movement = 6, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 2,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackGroupBase(9) { Attacks = new int[] { 0, 1, 4 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Breacher Fire Warrior Shas’ui", Movement = 6, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 2,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Breacher Fire Warrior Shas’ui", Movement = 6, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 2,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackGroupBase(1) { Attacks = new int[] { 0, 1, 4 } },
@@ -322,7 +328,7 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 9, new ModelBase() { Name = "Fire Warriors", Movement = 6, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 9, new ModelBase() { ModelNo = 9, Name = "Fire Warriors", Movement = 6, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(9)
@@ -336,7 +342,7 @@ namespace _40000_Statistics
                             new AttackGroupBase(9) { Attacks = new int[] { 1, 5 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Fire Warrior Shas’ui", Movement = 6, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Fire Warrior Shas’ui", Movement = 6, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(1)
@@ -367,7 +373,7 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 9, new ModelBase() { Name = "Kroot Carnivores", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 9, new ModelBase() { ModelNo = 9, Name = "Kroot Carnivores", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(9)
@@ -381,7 +387,7 @@ namespace _40000_Statistics
                             new AttackGroupBase(9) { Attacks = new int[] { 4 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Long-quill", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Long-quill", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(1)
@@ -409,7 +415,7 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 19, new ModelBase() { Name = "Kroot Carnivores", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 19, new ModelBase() { ModelNo = 19, Name = "Kroot Carnivores", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(19)
@@ -423,7 +429,7 @@ namespace _40000_Statistics
                             new AttackGroupBase(19) { Attacks = new int[] { 4 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Long-quill", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Long-quill", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(1)
@@ -454,7 +460,7 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 9, new ModelBase() { Name = "Kroot Farstalkers", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
+                    { 9, new ModelBase() { ModelNo = 9, Name = "Kroot Farstalkers", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(9)
@@ -475,7 +481,7 @@ namespace _40000_Statistics
                             new AttackGroupBase(9) { Attacks = new int[] { 2, 5 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Kroot Kill-broker", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Kroot Kill-broker", Movement = 7, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(1)
@@ -489,7 +495,7 @@ namespace _40000_Statistics
                             new AttackGroupBase(1) { Attacks = new int[] { 2, 7 } }
                         }
                     } },
-                    { 2, new ModelBase() { Name = "Kroot Hounds", Movement = 12, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 0,
+                    { 2, new ModelBase() { ModelNo = 2, Name = "Kroot Hounds", Movement = 12, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 7, ObjectiveControl = 0,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackGroupBase(2) { Attacks = new int[] {6 } }
@@ -524,7 +530,7 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 9, new ModelBase() { Name = "Pathfinders", Movement = 7, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
+                    { 9, new ModelBase() { ModelNo = 9, Name = "Pathfinders", Movement = 7, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(9)
@@ -546,7 +552,7 @@ namespace _40000_Statistics
                             new AttackGroupBase(9) { Attacks = new int[] { 3, 6 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Pathfinder Shas’ui", Movement = 7, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Pathfinder Shas’ui", Movement = 7, Toughness = 3, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(1)
@@ -583,7 +589,7 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 2, new ModelBase() { Name = "Stealth Shas’ui", Movement = 8, Toughness = 4, ArmorSave = 3, Wounds = 2, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 2, new ModelBase() { ModelNo = 2, Name = "Stealth Shas’ui", Movement = 8, Toughness = 4, ArmorSave = 3, Wounds = 2, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(2)
@@ -597,7 +603,7 @@ namespace _40000_Statistics
                             new AttackGroupBase(2) { Attacks = new int[] { 2 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Stealth Shas’vre", Movement = 8, Toughness = 4, ArmorSave = 3, Wounds = 2, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Stealth Shas’vre", Movement = 8, Toughness = 4, ArmorSave = 3, Wounds = 2, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(1)
@@ -633,7 +639,7 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 4, new ModelBase() { Name = "Stealth Shas’ui", Movement = 8, Toughness = 4, ArmorSave = 3, Wounds = 2, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 4, new ModelBase() { ModelNo = 4, Name = "Stealth Shas’ui", Movement = 8, Toughness = 4, ArmorSave = 3, Wounds = 2, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(4)
@@ -647,7 +653,7 @@ namespace _40000_Statistics
                             new AttackGroupBase(4) { Attacks = new int[] { 2 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Stealth Shas’vre", Movement = 8, Toughness = 4, ArmorSave = 3, Wounds = 2, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Stealth Shas’vre", Movement = 8, Toughness = 4, ArmorSave = 3, Wounds = 2, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(1)
@@ -681,13 +687,13 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 4, new ModelBase() { Name = "Vespid Stingwings", Movement = 12, Toughness = 4, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1
+                    { 4, new ModelBase() { ModelNo = 4, Name = "Vespid Stingwings", Movement = 12, Toughness = 4, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackGroupBase(4) { Attacks = new int[] { 0, 1 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Vespid Strain Leader", Movement = 12, Toughness = 4, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Vespid Strain Leader", Movement = 12, Toughness = 4, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackGroupBase(1) { Attacks = new int[] { 0, 1 } }
@@ -707,7 +713,7 @@ namespace _40000_Statistics
                 },
                 Models = new Dictionary<int, ModelBase>()
                 {
-                    { 9, new ModelBase() { Name = "Vespid Stingwings", Movement = 12, Toughness = 4, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
+                    { 9, new ModelBase() { ModelNo = 9, Name = "Vespid Stingwings", Movement = 12, Toughness = 4, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1, ComplexAttacks = true,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackOptionGroupBase(9)
@@ -723,12 +729,106 @@ namespace _40000_Statistics
                             new AttackGroupBase(9) { Attacks = new int[] { 4 } }
                         }
                     } },
-                    { 1, new ModelBase() { Name = "Vespid Strain Leader", Movement = 12, Toughness = 4, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1,
+                    { 1, new ModelBase() { ModelNo = 1, Name = "Vespid Strain Leader", Movement = 12, Toughness = 4, ArmorSave = 4, Wounds = 1, Leadership = 7, ObjectiveControl = 1,
                         AttackGroups = new List<AttackGroupBase>()
                         {
                             new AttackGroupBase(1) { Attacks = new int[] { 0, 4 } }
                         }
                     } }
+                }
+            },
+            #endregion
+            #region Mounted
+            new ModelBase() { ModelNo = 3, Name = "Krootox Rampagers- 3", Movement = 7, Toughness = 6, ArmorSave = 5, Wounds = 5, Leadership = 7, ObjectiveControl = 2,
+                Keywords = ModelBase.CreateKeywordList(Keywords.Mounted, Keywords.Grenades, Keywords.Kroot, "Krootox Rampagers"),
+                Attacks = new List<AttackBase>()
+                {
+                    /*0*/ new AttackBase() { Name = "Kroot pistol and hunting javelins", Range = 12, Attacks = 2, BallisticSkill = 4, Strength = 4, ArmorPenetration = 0, Damage = 1 },
+                    /*1*/ new AttackBase() { Name = "Close combat weapon",                           Attacks = 3, WeaponSkill = 3,    Strength = 4, ArmorPenetration = 1, Damage = 1 },
+                    /*2*/ new AttackBase() { Name = "Krootox fists",                                 Attacks = 4, WeaponSkill = 3,    Strength = 6, ArmorPenetration = 1, Damage = 2, Modifiers = Modifiers.Extra_Attacks | Modifiers.Sustained_Hits_1 }
+                },
+                AttackGroups = new List<AttackGroupBase>()
+                {
+                    new AttackGroupBase(3) { Attacks = new int[] { 0, 1, 2 } }
+                }
+            },
+            new ModelBase() { ModelNo = 6, Name = "Krootox Rampagers- 6", Movement = 7, Toughness = 6, ArmorSave = 5, Wounds = 5, Leadership = 7, ObjectiveControl = 2,
+                Keywords = ModelBase.CreateKeywordList(Keywords.Mounted, Keywords.Grenades, Keywords.Kroot, "Krootox Rampagers"),
+                Attacks = new List<AttackBase>()
+                {
+                    /*0*/ new AttackBase() { Name = "Kroot pistol and hunting javelins", Range = 12, Attacks = 2, BallisticSkill = 4, Strength = 4, ArmorPenetration = 0, Damage = 1 },
+                    /*1*/ new AttackBase() { Name = "Close combat weapon",                           Attacks = 3, WeaponSkill = 3,    Strength = 4, ArmorPenetration = 1, Damage = 1 },
+                    /*2*/ new AttackBase() { Name = "Krootox fists",                                 Attacks = 4, WeaponSkill = 3,    Strength = 6, ArmorPenetration = 1, Damage = 2, Modifiers = Modifiers.Extra_Attacks | Modifiers.Sustained_Hits_1 }
+                },
+                AttackGroups = new List<AttackGroupBase>()
+                {
+                    new AttackGroupBase(6) { Attacks = new int[] { 0, 1, 2 } }
+                }
+            },
+            new ModelBase() { ModelNo = 1, Name = "Krootox Riders - 1", Movement = 7, Toughness = 6, ArmorSave = 5, Wounds = 5, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                Keywords = ModelBase.CreateKeywordList(Keywords.Mounted, Keywords.Grenades, Keywords.Kroot, "Krootox Rampagers"),
+                Attacks = new List<AttackBase>()
+                {
+                    /*0*/ new AttackBase() { Name = "Repeater cannon", Range = 36, Attacks = 2,           BallisticSkill = 4, Strength = 7, ArmorPenetration = 1, Damage = 2, Modifiers = Modifiers.Rapid_Fire_2 },
+                    /*1*/ new AttackBase() { Name = "Tanglecannon",    Range = 36, AttacksExtra = "D6+1", BallisticSkill = 4, Strength = 6, ArmorPenetration = 0, Damage = 1, Modifiers = Modifiers.Blast | Modifiers.Heavy },
+                    /*2*/ new AttackBase() { Name = "Close combat weapon",         Attacks = 3,           WeaponSkill = 3,    Strength = 4, ArmorPenetration = 1, Damage = 1 },
+                    /*3*/ new AttackBase() { Name = "Krootox fists",               Attacks = 4,           WeaponSkill = 3,    Strength = 6, ArmorPenetration = 1, Damage = 2, Modifiers = Modifiers.Extra_Attacks }
+                },
+                AttackGroups = new List<AttackGroupBase>()
+                {
+                    new AttackOptionGroupBase(1)
+                    {
+                        AttackOption = new List<AttackGroupBase>()
+                        {
+                            new AttackGroupBase(1, 0) { Attacks = new int[] { 0 } },
+                            new AttackGroupBase(1, 0) { Attacks = new int[] { 1 } },
+                        }
+                    },
+                    new AttackGroupBase(1) { Attacks = new int[] { 2, 3 } }
+                }
+            },
+            new ModelBase() { ModelNo = 2, Name = "Krootox Riders - 2", Movement = 7, Toughness = 6, ArmorSave = 5, Wounds = 5, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                Keywords = ModelBase.CreateKeywordList(Keywords.Mounted, Keywords.Grenades, Keywords.Kroot, "Krootox Rampagers"),
+                Attacks = new List<AttackBase>()
+                {
+                    /*0*/ new AttackBase() { Name = "Repeater cannon", Range = 36, Attacks = 2,           BallisticSkill = 4, Strength = 7, ArmorPenetration = 1, Damage = 2, Modifiers = Modifiers.Rapid_Fire_2 },
+                    /*1*/ new AttackBase() { Name = "Tanglecannon",    Range = 36, AttacksExtra = "D6+1", BallisticSkill = 4, Strength = 6, ArmorPenetration = 0, Damage = 1, Modifiers = Modifiers.Blast | Modifiers.Heavy },
+                    /*2*/ new AttackBase() { Name = "Close combat weapon",         Attacks = 3,           WeaponSkill = 3,    Strength = 4, ArmorPenetration = 1, Damage = 1 },
+                    /*3*/ new AttackBase() { Name = "Krootox fists",               Attacks = 4,           WeaponSkill = 3,    Strength = 6, ArmorPenetration = 1, Damage = 2, Modifiers = Modifiers.Extra_Attacks }
+                },
+                AttackGroups = new List<AttackGroupBase>()
+                {
+                    new AttackOptionGroupBase(2)
+                    {
+                        AttackOption = new List<AttackGroupBase>()
+                        {
+                            new AttackGroupBase(2, 0) { Attacks = new int[] { 0 } },
+                            new AttackGroupBase(2, 0) { Attacks = new int[] { 1 } },
+                        }
+                    },
+                    new AttackGroupBase(2) { Attacks = new int[] { 2, 3 } }
+                }
+            },
+            new ModelBase() { ModelNo = 3, Name = "Krootox Riders - 3", Movement = 7, Toughness = 6, ArmorSave = 5, Wounds = 5, Leadership = 7, ObjectiveControl = 2, ComplexAttacks = true,
+                Keywords = ModelBase.CreateKeywordList(Keywords.Mounted, Keywords.Grenades, Keywords.Kroot, "Krootox Rampagers"),
+                Attacks = new List<AttackBase>()
+                {
+                    /*0*/ new AttackBase() { Name = "Repeater cannon", Range = 36, Attacks = 2,           BallisticSkill = 4, Strength = 7, ArmorPenetration = 1, Damage = 2, Modifiers = Modifiers.Rapid_Fire_2 },
+                    /*1*/ new AttackBase() { Name = "Tanglecannon",    Range = 36, AttacksExtra = "D6+1", BallisticSkill = 4, Strength = 6, ArmorPenetration = 0, Damage = 1, Modifiers = Modifiers.Blast | Modifiers.Heavy },
+                    /*2*/ new AttackBase() { Name = "Close combat weapon",         Attacks = 3,           WeaponSkill = 3,    Strength = 4, ArmorPenetration = 1, Damage = 1 },
+                    /*3*/ new AttackBase() { Name = "Krootox fists",               Attacks = 4,           WeaponSkill = 3,    Strength = 6, ArmorPenetration = 1, Damage = 2, Modifiers = Modifiers.Extra_Attacks }
+                },
+                AttackGroups = new List<AttackGroupBase>()
+                {
+                    new AttackOptionGroupBase(3)
+                    {
+                        AttackOption = new List<AttackGroupBase>()
+                        {
+                            new AttackGroupBase(3, 0) { Attacks = new int[] { 0 } },
+                            new AttackGroupBase(3, 0) { Attacks = new int[] { 1 } },
+                        }
+                    },
+                    new AttackGroupBase(3) { Attacks = new int[] { 2, 3 } }
                 }
             },
             #endregion
