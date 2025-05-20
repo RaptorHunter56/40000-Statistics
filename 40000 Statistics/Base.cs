@@ -339,7 +339,8 @@ namespace _40000_Statistics
         Shaper       = 1 << 10,
         Mounted      = 1 << 11,
         Battleline   = 1 << 12,
-        Fire_Warrior = 1 << 13
+        Fire_Warrior = 1 << 13,
+        Beasts       = 1 << 14
     }
 
     public static class DictionaryExtensions

@@ -46,6 +46,9 @@ namespace _40000_Statistics
             {"Krootox Riders - 1",               40},
             {"Krootox Riders - 2",               60},
             {"Krootox Riders - 3",               90},
+            // Beast
+            {"Kroot Hounds - 5",                 40},
+            {"Kroot Hounds - 10",                80},
         };
         public static List<ModelBase> Units = new List<ModelBase>()
         {
@@ -829,6 +832,30 @@ namespace _40000_Statistics
                         }
                     },
                     new AttackGroupBase(3) { Attacks = new int[] { 2, 3 } }
+                }
+            },
+            #endregion
+            #region Beast
+            new ModelBase() { ModelNo = 5, Name = "Kroot Hounds - 5", Movement = 12, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 8, ObjectiveControl = 0,
+                Keywords = ModelBase.CreateKeywordList(Keywords.Beasts, Keywords.Kroot, "Hounds"),
+                Attacks = new List<AttackBase>()
+                {
+                    /*0*/ new AttackBase() { Name = "Ripping fangs", Attacks = 3, WeaponSkill = 3, Strength = 3, ArmorPenetration = 0, Damage = 1 }
+                },
+                AttackGroups = new List<AttackGroupBase>()
+                {
+                    new AttackGroupBase(5) { Attacks = new int[] { 0 } }
+                }
+            },
+            new ModelBase() { ModelNo = 10, Name = "Kroot Hounds - 10", Movement = 12, Toughness = 3, ArmorSave = 6, Wounds = 1, Leadership = 8, ObjectiveControl = 0,
+                Keywords = ModelBase.CreateKeywordList(Keywords.Beasts, Keywords.Kroot, "Hounds"),
+                Attacks = new List<AttackBase>()
+                {
+                    /*0*/ new AttackBase() { Name = "Ripping fangs", Attacks = 3, WeaponSkill = 3, Strength = 3, ArmorPenetration = 0, Damage = 1 }
+                },
+                AttackGroups = new List<AttackGroupBase>()
+                {
+                    new AttackGroupBase(10) { Attacks = new int[] { 0 } }
                 }
             },
             #endregion
