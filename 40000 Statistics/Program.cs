@@ -53,7 +53,7 @@ namespace _40000_Statistics
             Console.WriteLine(" Select an option:");
             Console.WriteLine(" 0. Exit");
             Console.WriteLine(" 1. Tau");
-            Console.WriteLine(" 2. Astra Militarum");
+            Console.WriteLine(" 2. Tau (Last)");
             Console.Write(" Enter your choice: ");
             while (true)
             {
@@ -61,7 +61,7 @@ namespace _40000_Statistics
                 string input = Console.ReadLine();
                 if (input == "0") break;
 
-                foreach (var tau in (input == "1" ? Tau.Units : AstraMilitarum.Units))
+                foreach (var tau in (input == "1" ? Tau.Units : (input == "2" ? new List<ModelBase>() { Tau.Units.Last() } : AstraMilitarum.Units)))
                 {
                     UnitBase unitBase;
                     if (tau is UnitBase)
@@ -73,9 +73,9 @@ namespace _40000_Statistics
                     var attackGroup = AttackOptionGroupBase.GetAttackGroups(attackOptions, unitBase);
                     Console.WriteLine(" Choice No: " + attackGroup.Count);
                     var table = new ConsoleTable("Index", "Values");
-                    foreach (var dict in attackGroup.Take(Count))
+                    foreach (var dict in attackGroup.Take(input == "2" ? 100 : Count))
                     {
-                        table.AddRow(dict.Item1, string.Join(", ", dict.Item2.OrderBy(kvp => kvp.Key).Select(kvp => $"{kvp.Key}: {kvp.Value}")));
+                        table.AddRow(dict.Item1, string.Join(", ", dict.Item2.OrderBy(kvp => kvp.Key).Select(kvp => $"{(input == "2" ? tau.Attacks[kvp.Key].Name : kvp.Key.ToString())}: {kvp.Value}")));
                     }
                     if (Count < attackGroup.Count)
                         table.AddRow("...", "...");

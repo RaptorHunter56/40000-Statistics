@@ -29,7 +29,7 @@ namespace _40000_Statistics
     }
     public abstract class DelegatesBase
     {
-        public Dictionary<EffectsType, List<Delegate>> Effects { get; } = new Dictionary<EffectsType, List<Delegate>>();
+        public Dictionary<EffectsType, List<Delegate>> Effects { get; set; } = new Dictionary<EffectsType, List<Delegate>>();
         public KeyValuePair<EffectsType, List<Delegate>> CreateEffects
         {
             set
@@ -101,43 +101,36 @@ namespace _40000_Statistics
     }
     public class UnitBase : ModelBase 
     { 
-        public Dictionary<int, ModelBase> Models { get; set; }
-        public UnitBase() => Models = new Dictionary<int, ModelBase>();
-        public UnitBase(ModelBase model) => Models = new Dictionary<int, ModelBase> { { model.ModelNo, model } };
-        public override string ToString() => Name ?? Models.Values.FirstOrDefault()?.Name ?? "None";
-        public override int ModelNo => Models?.Keys.Sum() ?? 1;
-        public override int Movement => Models.Values.FirstOrDefault()?.Movement ?? 0;
-        public override int Toughness => Models.Values.FirstOrDefault()?.Toughness ?? 0;
-        public override int ArmorSave => Models.Values.FirstOrDefault()?.ArmorSave ?? 0;
-        public override int InvulnerableSave => Models.Values.FirstOrDefault()?.InvulnerableSave ?? 0;
-        public override int Wounds => Models.Values.FirstOrDefault()?.Wounds ?? 0;
-        public override int Leadership => Models.Values.FirstOrDefault()?.Leadership ?? 0;
-        public override int ObjectiveControl => Models.Values.FirstOrDefault()?.ObjectiveControl ?? 0;
-        public override List<string> Keywords => Models.Values.SelectMany(x => x.Keywords).Distinct().ToList() ?? new List<string>();
+        public List<Tuple<int, ModelBase>> Models { get; set; }
+        public UnitBase() => Models = new List<Tuple<int, ModelBase>>();
+        public UnitBase(ModelBase model)
+        {
+            Models = new List<Tuple<int, ModelBase>> { new Tuple<int, ModelBase>(model.ModelNo, model) };
+            Effects = model.Effects;
+        }
+
+        public override string ToString() => Name ?? Models.Select(x => x.Item2).FirstOrDefault()?.Name ?? "None";
+        public override int ModelNo => Models?.Select(x => x.Item1).Sum() ?? 1;
+        public override int Movement => Models.Select(x => x.Item2).FirstOrDefault()?.Movement ?? 0;
+        public override int Toughness => Models.Select(x => x.Item2).FirstOrDefault()?.Toughness ?? 0;
+        public override int ArmorSave => Models.Select(x => x.Item2).FirstOrDefault()?.ArmorSave ?? 0;
+        public override int InvulnerableSave => Models.Select(x => x.Item2).FirstOrDefault()?.InvulnerableSave ?? 0;
+        public override int Wounds => Models.Select(x => x.Item2).FirstOrDefault()?.Wounds ?? 0;
+        public override int Leadership => Models.Select(x => x.Item2).FirstOrDefault()?.Leadership ?? 0;
+        public override int ObjectiveControl => Models.Select(x => x.Item2).FirstOrDefault()?.ObjectiveControl ?? 0;
+        public override List<string> Keywords => Models.Select(x => x.Item2).SelectMany(x => x.Keywords).Distinct().ToList() ?? new List<string>();
+
 
         public new IEnumerable<AttackOptionGroupBase> GetAttackOptionGroupBase() => Models.Select(model => {
             var (max, min) = GetAttackMaxMin(model);
-            return new AttackOptionGroupBase(model.Value.AttackGroups, max, min);
+            return new AttackOptionGroupBase(model.Item2.AttackGroups, max, min);
         });
-        public Tuple<int, int?> GetAttackMaxMin(KeyValuePair<int, ModelBase> model)
+        public Tuple<int, int?> GetAttackMaxMin(Tuple<int, ModelBase> model)
         {
-            if (model.Value.ComplexAttacks)
-                return new Tuple<int, int?>(model.Value.AttackGroups.Where(attack => attack.GetType() != typeof(WargearGroupBase)).Select(attack => attack.MaxNo == attack.MinNo ? attack.MaxNo : attack.MaxNo - attack.MinNo).Sum(), model.Value.AttackGroups.Select(attack => attack.MinNo).Sum());
+            if (model.Item2.ComplexAttacks)
+                return new Tuple<int, int?>(model.Item2.AttackGroups.Where(attack => attack.GetType() != typeof(WargearGroupBase)).Select(attack => attack.MaxNo == attack.MinNo ? attack.MaxNo : attack.MaxNo - attack.MinNo).Sum(), model.Item2.AttackGroups.Select(attack => attack.MinNo).Sum());
             else
-                return new Tuple<int, int?>(model.Key, null);
-        }
-
-        public ModelBase this[int key]
-        {
-            get
-            {
-                Models.TryGetValue(key, out var value);
-                return value;
-            }
-            set
-            {
-                Models[key] = value;
-            }
+                return new Tuple<int, int?>(model.Item1, null);
         }
     }
 
@@ -219,14 +212,8 @@ namespace _40000_Statistics
                 }
                 else if (options.GetType() == typeof(AttackOptionGroupBase))
                 {
-                    foreach (var attackOption in ((AttackOptionGroupBase)options).AttackOption)
-                    {
-                        var tempAttackGroups = (attackOption.GetType() == typeof(AttackGroupBase))
-                            ? new AttackOptionGroupBase(attackOption).GetAttackGroupsSingle()
-                            : ((AttackOptionGroupBase)attackOption).GetAttackGroupsSingle();
-
-                        allCombinations = MergeCombinations(allCombinations, tempAttackGroups);
-                    }
+                    var tempAttackGroups = ((AttackOptionGroupBase)options).GetAttackGroupsSingle();
+                    allCombinations = MergeCombinations(allCombinations, tempAttackGroups);
                 }
             }
             var output = allCombinations.Where(tuple => tuple.Item1 >= MinNo && tuple.Item1 <= MaxNo).Select(combination => new Tuple<int, Dictionary<int, int>>(combination.Item1, combination.Item2.Where(kvp => kvp.Value != 0).Distinct().ToDictionary(kvp => kvp.Key, kvp => kvp.Value).OrderBy(kvp => kvp.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)));
@@ -322,7 +309,12 @@ namespace _40000_Statistics
         Anti_Vehicle_4     = 1 << 17,
         Devastating_Wounds = 1 << 18,
         Sustained_Hits_1   = 1 << 19,
-        Rapid_Fire_2       = 1 << 20
+        Rapid_Fire_2       = 1 << 20,
+        One_Shot = 1 << 21,
+        Melta_4 = 1 << 22,
+        Melta_3 = 1 << 23,
+        Anti_Infantry_2 = 1 << 24,
+        Anti_Fly_3 = 1 << 25
     }
     public enum Keywords
     {
@@ -340,7 +332,13 @@ namespace _40000_Statistics
         Mounted      = 1 << 11,
         Battleline   = 1 << 12,
         Fire_Warrior = 1 << 13,
-        Beasts       = 1 << 14
+        Beasts       = 1 << 14,
+        Aircraft = 1 << 15,
+        Crisis = 1 << 16,
+        Smoke = 1 << 17,
+        Transport = 1 << 18,
+        Titanic = 1 << 19,
+        Towering = 1 << 20
     }
 
     public static class DictionaryExtensions
